@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build: fastapi/
+    ports:
+    - 8000:80
+    volumes:
+    - ./fastapi:/code
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+  elasticsearch:
+    build: elasticsearch/
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - elk
+    healthcheck:
+      test: curl http://elasticsearch:9200
+      interval: 1s
+      timeout: 3s
+      retries: 60
+networks:
+  elk:
+    driver: bridge
